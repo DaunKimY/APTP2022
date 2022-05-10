@@ -47,35 +47,308 @@ def indexSet():
     # delete "pass" and write the code here
     pass
 
+class BlockInfo:
+  number = "-1"
+  color = "검"
+  def __init__(self, number, color):
+    self.number = number
+    self.color = color
+
 
 class Block:
     # 1~4번째 순서의 사람들이 가질 블럭들 저장하는 변수들 선언, 파이썬은 포인터가 없어서 딕셔너리로 구현해주시면 될 것 같습니다.
     # Ex, Block.blockLine_1[num] == "1-233479", Block.blockLine_3[color] == "검검흰검흰흰", Block.blockLine_2[open] = "TFFTTTFF"
     # index 설명 >> num: 숫자 & 조커 값을 문자열로 저장(순차적으로), color: 블럭이 흰색인지 검은색인지 저장하는 문자열, open: 블럭이 open 됐는지 여부를 저장하는 문자열
+
+    toDistribute = []  # 나눠줄 블럭들을 모아놓을 리스트
+
     def __init__(self):
-        self.blockLine_0 = {"num": "", "color": "", "open": ""}
-        self.blockLine_1 = {"num": "", "color": "", "open": ""}
-        self.blockLine_2 = {"num": "", "color": "", "open": ""}
-        self.blockLine_3 = {"num": "", "color": "", "open": ""}
-        self.blockLeft = {"num": "", "color": ""}  # 분배하고 나중에 하나씩 가져갈 블럭들 넣어놓는 곳
+        self.blockLine_0 = {"num": [], "color": "", "open": ""}
+        self.blockLine_1 = {"num": [], "color": "", "open": ""}
+        self.blockLine_2 = {"num": [], "color": "", "open": ""}
+        self.blockLine_3 = {"num": [], "color": "", "open": ""}
+        self.blockLeft = {"num": [], "color": ""}  # 분배하고 나중에 하나씩 가져갈 블럭들 넣어놓는 곳
+
+        self.makeToDistribute()
+
+    def makeToDistribute(self):
+        for i in range(0, 12):
+            temp = BlockInfo(str(i), "검")
+            self.toDistribute.append(temp)
+        for i in range(0, 12):
+            temp = BlockInfo(str(i), "흰")
+            self.toDistribute.append(temp)
+        self.toDistribute.append(BlockInfo("-", "검"))
+        self.toDistribute.append(BlockInfo("-", "흰"))
 
     # 이정현's part
     # 난수 발생시켜서 네명의 사용자에게 블럭들 주는 함수
     def giveBlock(self):
-        # delete "pass" and write your code here
-        pass
+        random.shuffle(self.toDistribute)
+        for i in range(0, 4):
+            num = []
+            color = ""
+            open = "FFF"
+            for j in range(0, 3):
+                temp = self.toDistribute.pop()
+                num.append(temp.number)
+                color += temp.color
+            if i == 0:
+                self.blockLine_0['num'] = num
+                self.blockLine_0['color'] = color
+                self.blockLine_0['open'] = open
+            elif i == 1:
+                self.blockLine_1['num'] = num
+                self.blockLine_1['color'] = color
+                self.blockLine_1['open'] = open
+            elif i == 2:
+                self.blockLine_2['num'] = num
+                self.blockLine_2['color'] = color
+                self.blockLine_2['open'] = open
+            elif i == 3:
+                self.blockLine_3['num'] = num
+                self.blockLine_3['color'] = color
+                self.blockLine_3['open'] = open
+
+        num_for_left_blocks = []
+        color_for_left_blocks = ""
+        for i in range(0, 14):
+            temp = self.toDistribute.pop()
+            num_for_left_blocks.append(temp.number)
+            color_for_left_blocks += temp.color
+        self.blockLeft['num'] = num_for_left_blocks
+        self.blockLeft['color'] = color_for_left_blocks
+
 
     #박강우's part
     # 블럭들을 게임 시작전 배분하고 나서, 블럭을 정렬하는 함수 (처음 정렬할 때에는 조커블럭의 위치는 사용자가 정할 수 있도록 할 것!)
     def alignBlock(self):
-        # delete "pass" and write your code here
-        pass
+        blockLine = [self.blockLine_0, self.blockLine_1, self.blockLine_2, self.blockLine_3]
+        for i in range(0,4):
+            cnt = 0
+            for p in range(0,len(blockLine[i]["num"])):
+                if blockLine[i]["num"][p] == '-':
+                    cnt += 1 # 조커 있으면 cnt값 1 증가
+            if cnt == 0: # 조커 없을 때
+                for j in range(0, len(blockLine[i]["num"]) - 1):
+                    if blockLine[i]["num"][j] > blockLine[i]["num"][j + 1]:  # 왼쪽 숫자가 더 클 때
+                        n = blockLine[i]["num"][j]  # 숫자 저장
+                        s = blockLine[i]["color"][j]  # 색 저장
+                        blockLine[i]["num"][j] = blockLine[i]["num"][j + 1]  # 오름차순 정렬
+                        blockLine[i]["num"][j + 1] = n  # 오름차순 정렬
+                        blockLine[i]["color"][j] = blockLine[i]["color"][j + 1]  # 색깔도 바꾸기
+                        blockLine[i]["color"][j + 1] = s  # 색깔도 바꾸기
+                    elif blockLine[i]["num"][j] == blockLine[i]["num"][j + 1]:  # 연속하는 숫자가 같을 때
+                        if blockLine[i]["color"][j] == "흰":  # 왼쪽 블럭가 흰색이면
+                            blockLine[i]["color"][j] = "검"  # 왼쪽 블럭을 검정색
+                            blockLine[i]["color"][j + 1] = "흰"  # 오른쪽 블럭을 흰색으로
+
+            elif cnt == 1: # 조커 1개일 때
+                for j in range(0, len(blockLine[i]["num"]) - 1):
+                    if blockLine[i]["num"][j] == '-':  # j번째 숫자가 조커일 때
+                        joker = blockLine[i]["num"][j]  # 조커 저장
+                        joker_c = blockLine[i]["color"][j]  # 색 저장
+                        blockLine[i]["num"][j] = blockLine[i]["num"][
+                            len(blockLine[i]["num"]) - 1]  # 마지막 숫자랑 조커 위치 바꾸기
+                        blockLine[i]["num"][len(blockLine[i]["num"]) - 1] = joker  # 마지막 숫자랑 조커 위치 바꾸기
+                        blockLine[i]["color"][j] = blockLine[i]["color"][
+                            len(blockLine[i]["num"]) - 1]  # 색깔도 바꾸기
+                        blockLine[i]["color"][len(blockLine[i]["num"]) - 1] = joker_c  # 색깔도 바꾸기
+                    if blockLine[i]["num"][j] > blockLine[i]["num"][j + 1]:  # 왼쪽 숫자가 더 클 때
+                        n = blockLine[i]["num"][j]  # 숫자 저장
+                        s = blockLine[i]["color"][j]  # 색 저장
+                        blockLine[i]["num"][j] = blockLine[i]["num"][j + 1]  # 오름차순 정렬
+                        blockLine[i]["num"][j + 1] = n  # 오름차순 정렬
+                        blockLine[i]["color"][j] = blockLine[i]["color"][j + 1]  # 색깔도 바꾸기
+                        blockLine[i]["color"][j + 1] = s  # 색깔도 바꾸기
+                    elif blockLine[i]["num"][j] == blockLine[i]["num"][j + 1]:  # 연속하는 숫자가 같을 때
+                        if blockLine[i]["color"][j] == "흰":  # 왼쪽 블럭가 흰색이면
+                            blockLine[i]["color"][j] = "검"  # 왼쪽 블럭을 검정색
+                            blockLine[i]["color"][j + 1] = "흰"  # 오른쪽 블럭을 흰색으로
+                if blockLine[i]["num"][len(blockLine[i]["num"]) - 1] == '-': # 조커가 존재해서 조커를 맨 뒤로 보낸 상황일 때
+                    self.idx = int(input('몇번째 자리에 조커를 넣으시겠습니까?(1~): ')) # 조커 어디에 넣을지 질문
+                    for k in range(len(blockLine[i]["num"]), self.idx, -1): # 마지막 자리부터 한 칸씩 왼쪽으로 이동해서 원하는 자리에 위치
+                        store = blockLine[i]["num"][k - 1] # 조커 저장
+                        store_c = blockLine[i]["color"][k - 1] # 조커 색 저장
+                        blockLine[i]["num"][k - 1] = blockLine[i]["num"][k - 2] # 조커 왼쪽으로 이동
+                        blockLine[i]["num"][k - 2] = store # 조커 왼쪽으로 이동
+                        blockLine[i]["color"][k - 1] = blockLine[i]["color"][k - 2] # 색깔도 이동
+                        blockLine[i]["color"][k - 2] = store_c # 색깔도 이동
+
+            elif cnt == 2: # 조커가 2개일 때
+                if blockLine[i]["num"][len(blockLine[i]["num"]) - 1] == '-' and blockLine[i]["num"][
+                    len(blockLine[i]["num"]) - 2] == '-': # 뒤에 2개가 다 조커일 때
+                    for j in range(0, len(blockLine[i]["num"] - 3)):
+                        if blockLine[i]["num"][j] > blockLine[i]["num"][j + 1]:  # 왼쪽 숫자가 더 클 때
+                            n = blockLine[i]["num"][j]  # 숫자 저장
+                            s = blockLine[i]["color"][j]  # 색 저장
+                            blockLine[i]["num"][j] = blockLine[i]["num"][j + 1]  # 오름차순 정렬
+                            blockLine[i]["num"][j + 1] = n  # 오름차순 정렬
+                            blockLine[i]["color"][j] = blockLine[i]["color"][j + 1]  # 색깔도 바꾸기
+                            blockLine[i]["color"][j + 1] = s  # 색깔도 바꾸기
+                        elif blockLine[i]["num"][j] == blockLine[i]["num"][j + 1]:  # 연속하는 숫자가 같을 때
+                            if blockLine[i]["color"][j] == "흰":  # 왼쪽 블럭가 흰색이면
+                                blockLine[i]["color"][j] = "검"  # 왼쪽 블럭을 검정색
+                                blockLine[i]["color"][j + 1] = "흰"  # 오른쪽 블럭을 흰색으로
+                    self.idx1 = int(input('조커가 두 개입니다. 첫번째 조커를 어디에 넣으시겠습니까?: '))  # 첫번째 조커 어디에 넣을지 질문
+                    self.idx2 = int(input('조커가 두 개입니다. 두번째 조커를 어디에 넣으시겠습니까?: '))  # 두번째 조커 어디에 넣을지 질문
+                    for k in range(len(blockLine[i]["num"]) - 1, self.idx1, -1): # 끝에서 두 번째 자리에 위치한 조커부터 한 칸씩 왼쪽으로 이동해서 원하는 자리에 위치
+                        store = blockLine[i]["num"][k - 1] # 조커 저장
+                        store_c = blockLine[i]["color"][k - 1] # 조커 색 저장
+                        blockLine[i]["num"][k - 1] = blockLine[i]["num"][k - 2] # 조커 왼쪽으로 이동
+                        blockLine[i]["num"][k - 2] = store # 조커 왼쪽으로 이동
+                        blockLine[i]["color"][k - 1] = blockLine[i]["color"][k - 2] # 색깔도 이동
+                        blockLine[i]["color"][k - 2] = store_c # 색깔도 이동
+                    for k in range(len(blockLine[i]["num"]), self.idx2, -1): # 끝에 위치한 조커부터 한 칸씩 왼쪽으로 이동해서 원하는 자리에 위치
+                        store = blockLine[i]["num"][k - 1]  # 조커 저장
+                        store_c = blockLine[i]["color"][k - 1]  # 조커 색 저장
+                        blockLine[i]["num"][k - 1] = blockLine[i]["num"][k - 2]  # 조커 왼쪽으로 이동
+                        blockLine[i]["num"][k - 2] = store  # 조커 왼쪽으로 이동
+                        blockLine[i]["color"][k - 1] = blockLine[i]["color"][k - 2]  # 색깔도 이동
+                        blockLine[i]["color"][k - 2] = store_c  # 색깔도 이동
+
+                elif blockLine[i]["num"][len(blockLine[i]["num"]) - 1] == '-' and blockLine[i]["num"][
+                    len(blockLine[i]["num"]) - 2] != '-': # 맨 끝에만 조커가 있을 때
+                    for j in range(0, len(blockLine[i]["num"]) - 2):
+                        if blockLine[i]["num"][j] == '-':  # j번째 숫자가 조커일 때
+                            joker = blockLine[i]["num"][j]  # 조커 저장
+                            joker_c = blockLine[i]["color"][j]  # 색 저장
+                            blockLine[i]["num"][j] = blockLine[i]["num"][
+                                len(blockLine[i]["num"]) - 2]  # 마지막에서 두 번째 숫자랑 조커 위치 바꾸기
+                            blockLine[i]["num"][len(blockLine[i]["num"]) - 2] = joker  # 마지막 숫자랑 조커 위치 바꾸기
+                            blockLine[i]["color"][j] = blockLine[i]["color"][
+                                len(blockLine[i]["num"]) - 2]  # 색깔도 바꾸기
+                            blockLine[i]["color"][len(blockLine[i]["num"]) - 2] = joker_c  # 색깔도 바꾸기
+                    for j in range(0, len(blockLine[i]["num"] - 3)):
+                        if blockLine[i]["num"][j] > blockLine[i]["num"][j + 1]:  # 왼쪽 숫자가 더 클 때
+                            n = blockLine[i]["num"][j]  # 숫자 저장
+                            s = blockLine[i]["color"][j]  # 색 저장
+                            blockLine[i]["num"][j] = blockLine[i]["num"][j + 1]  # 오름차순 정렬
+                            blockLine[i]["num"][j + 1] = n  # 오름차순 정렬
+                            blockLine[i]["color"][j] = blockLine[i]["color"][j + 1]  # 색깔도 바꾸기
+                            blockLine[i]["color"][j + 1] = s  # 색깔도 바꾸기
+                        elif blockLine[i]["num"][j] == blockLine[i]["num"][j + 1]:  # 연속하는 숫자가 같을 때
+                            if blockLine[i]["color"][j] == "흰":  # 왼쪽 블럭가 흰색이면
+                                blockLine[i]["color"][j] = "검"  # 왼쪽 블럭을 검정색
+                                blockLine[i]["color"][j + 1] = "흰"  # 오른쪽 블럭을 흰색으로
+                    self.idx1 = int(input('조커가 두 개입니다. 첫번째 조커를 어디에 넣으시겠습니까?: '))  # 첫번째 조커 어디에 넣을지 질문
+                    self.idx2 = int(input('조커가 두 개입니다. 두번째 조커를 어디에 넣으시겠습니까?: '))  # 두번째 조커 어디에 넣을지 질문
+                    for k in range(len(blockLine[i]["num"]) - 1, self.idx1, -1): # 끝에서 두 번째 자리에 위치한 조커부터 한 칸씩 왼쪽으로 이동해서 원하는 자리에 위치
+                        store = blockLine[i]["num"][k - 1] # 조커 저장
+                        store_c = blockLine[i]["color"][k - 1] # 조커 색 저장
+                        blockLine[i]["num"][k - 1] = blockLine[i]["num"][k - 2] # 조커 왼쪽으로 이동
+                        blockLine[i]["num"][k - 2] = store # 조커 왼쪽으로 이동
+                        blockLine[i]["color"][k - 1] = blockLine[i]["color"][k - 2] # 색깔도 이동
+                        blockLine[i]["color"][k - 2] = store_c # 색깔도 이동
+                    for k in range(len(blockLine[i]["num"]), self.idx2, -1): # 끝에 위치한 조커부터 한 칸씩 왼쪽으로 이동해서 원하는 자리에 위치
+                        store = blockLine[i]["num"][k - 1]  # 조커 저장
+                        store_c = blockLine[i]["color"][k - 1]  # 조커 색 저장
+                        blockLine[i]["num"][k - 1] = blockLine[i]["num"][k - 2]  # 조커 왼쪽으로 이동
+                        blockLine[i]["num"][k - 2] = store  # 조커 왼쪽으로 이동
+                        blockLine[i]["color"][k - 1] = blockLine[i]["color"][k - 2]  # 색깔도 이동
+                        blockLine[i]["color"][k - 2] = store_c  # 색깔도 이동
+
+                elif blockLine[i]["num"][len(blockLine[i]["num"]) - 1] != '-' and blockLine[i]["num"][
+                    len(blockLine[i]["num"]) - 2] == '-': # 끝에서 두 번째 자리에만 조커가 있을 때
+                    for j in range(0, len(blockLine[i]["num"]) - 2):
+                        if blockLine[i]["num"][j] == '-': # j번째 숫자가 조커일 때
+                            joker = blockLine[i]["num"][j] # 조커 저장
+                            joker_c = blockLine[i]["color"][j] # 색깔도 저장
+                            blockLine[i]["num"][j] = blockLine[i]["num"][
+                                len(blockLine[i]["num"]) - 1]  # 마지막 숫자랑 조커 위치 바꾸기
+                            blockLine[i]["num"][len(blockLine[i]["num"]) - 1] = joker  # 마지막 숫자랑 조커 위치 바꾸기
+                            blockLine[i]["color"][j] = blockLine[i]["color"][
+                                len(blockLine[i]["num"]) - 1]  # 색깔도 바꾸기
+                            blockLine[i]["color"][len(blockLine[i]["num"]) - 1] = joker_c  # 색깔도 바꾸기
+                    for j in range(0, len(blockLine[i]["num"] - 3)):
+                        if blockLine[i]["num"][j] > blockLine[i]["num"][j + 1]:  # 왼쪽 숫자가 더 클 때
+                            n = blockLine[i]["num"][j]  # 숫자 저장
+                            s = blockLine[i]["color"][j]  # 색 저장
+                            blockLine[i]["num"][j] = blockLine[i]["num"][j + 1]  # 오름차순 정렬
+                            blockLine[i]["num"][j + 1] = n  # 오름차순 정렬
+                            blockLine[i]["color"][j] = blockLine[i]["color"][j + 1]  # 색깔도 바꾸기
+                            blockLine[i]["color"][j + 1] = s  # 색깔도 바꾸기
+                        elif blockLine[i]["num"][j] == blockLine[i]["num"][j + 1]:  # 연속하는 숫자가 같을 때
+                            if blockLine[i]["color"][j] == "흰":  # 왼쪽 블럭가 흰색이면
+                                blockLine[i]["color"][j] = "검"  # 왼쪽 블럭을 검정색
+                                blockLine[i]["color"][j + 1] = "흰"  # 오른쪽 블럭을 흰색으로
+                    self.idx1 = int(input('조커가 두 개입니다. 첫번째 조커를 어디에 넣으시겠습니까?: '))  # 첫번째 조커 어디에 넣을지 질문
+                    self.idx2 = int(input('조커가 두 개입니다. 두번째 조커를 어디에 넣으시겠습니까?: '))  # 두번째 조커 어디에 넣을지 질문
+                    for k in range(len(blockLine[i]["num"]) - 1, self.idx1,
+                                   -1):  # 끝에서 두 번째 자리에 위치한 조커부터 한 칸씩 왼쪽으로 이동해서 원하는 자리에 위치
+                        store = blockLine[i]["num"][k - 1]  # 조커 저장
+                        store_c = blockLine[i]["color"][k - 1]  # 조커 색 저장
+                        blockLine[i]["num"][k - 1] = blockLine[i]["num"][k - 2]  # 조커 왼쪽으로 이동
+                        blockLine[i]["num"][k - 2] = store  # 조커 왼쪽으로 이동
+                        blockLine[i]["color"][k - 1] = blockLine[i]["color"][k - 2]  # 색깔도 이동
+                        blockLine[i]["color"][k - 2] = store_c  # 색깔도 이동
+                    for k in range(len(blockLine[i]["num"]), self.idx2,
+                                   -1):  # 끝에 위치한 조커부터 한 칸씩 왼쪽으로 이동해서 원하는 자리에 위치
+                        store = blockLine[i]["num"][k - 1]  # 조커 저장
+                        store_c = blockLine[i]["color"][k - 1]  # 조커 색 저장
+                        blockLine[i]["num"][k - 1] = blockLine[i]["num"][k - 2]  # 조커 왼쪽으로 이동
+                        blockLine[i]["num"][k - 2] = store  # 조커 왼쪽으로 이동
+                        blockLine[i]["color"][k - 1] = blockLine[i]["color"][k - 2]  # 색깔도 이동
+                        blockLine[i]["color"][k - 2] = store_c  # 색깔도 이동
+
+                elif blockLine[i]["num"][len(blockLine[i]["num"]) - 1] != '-' and blockLine[i]["num"][
+                    len(blockLine[i]["num"]) - 2] != '-': # 끝에서 2개 다 조커가 아닐 때
+                    for j in range(0, len(blockLine[i]["num"]) - 2):
+                        if blockLine[i]["num"][j] == '-' and blockLine[i]["num"][len(blockLine[i]["num"]) - 1] != '-': # 처음 발견한 조커 맨 뒤로 보내기
+                            joker1 = blockLine[i]["num"][j]  # 조커 저장
+                            joker1_c = blockLine[i]["color"][j]  # 색 저장
+                            blockLine[i]["num"][j] = blockLine[i]["num"][
+                                len(blockLine[i]["num"]) - 1]  # 마지막 숫자랑 조커 위치 바꾸기
+                            blockLine[i]["num"][len(blockLine[i]["num"]) - 1] = joker1  # 마지막 숫자랑 조커 위치 바꾸기
+                            blockLine[i]["color"][j] = blockLine[i]["color"][
+                                len(blockLine[i]["num"]) - 1]  # 색깔도 바꾸기
+                            blockLine[i]["color"][len(blockLine[i]["num"]) - 1] = joker1_c  # 색깔도 바꾸기
+                        elif blockLine[i]["num"][j] == '-' and blockLine[i]["num"][len(blockLine[i]["num"]) - 1] == '-': # 맨 뒤로 조커를 보낸 상태에서 조커를 하나 더 찾을 때
+                            joker2 = blockLine[i]["num"][j]  # 조커 저장
+                            joker2_c = blockLine[i]["color"][j]  # 색 저장
+                            blockLine[i]["num"][j] = blockLine[i]["num"][
+                                len(blockLine[i]["num"]) - 2]  # 마지막에서 두 번째 숫자랑 조커 위치 바꾸기
+                            blockLine[i]["num"][len(blockLine[i]["num"]) - 2] = joker2  # 마지막에서 두 번째 숫자랑 조커 위치 바꾸기
+                            blockLine[i]["color"][j] = blockLine[i]["color"][
+                                len(blockLine[i]["num"]) - 2]  # 색깔도 바꾸기
+                            blockLine[i]["color"][len(blockLine[i]["num"]) - 1] = joker2_c  # 색깔도 바꾸기
+                    for j in range(0, len(blockLine[i]["num"] - 3)):
+                        if blockLine[i]["num"][j] > blockLine[i]["num"][j + 1]:  # 왼쪽 숫자가 더 클 때
+                            n = blockLine[i]["num"][j]  # 숫자 저장
+                            s = blockLine[i]["color"][j]  # 색 저장
+                            blockLine[i]["num"][j] = blockLine[i]["num"][j + 1]  # 오름차순 정렬
+                            blockLine[i]["num"][j + 1] = n  # 오름차순 정렬
+                            blockLine[i]["color"][j] = blockLine[i]["color"][j + 1]  # 색깔도 바꾸기
+                            blockLine[i]["color"][j + 1] = s  # 색깔도 바꾸기
+                        elif blockLine[i]["num"][j] == blockLine[i]["num"][j + 1]:  # 연속하는 숫자가 같을 때
+                            if blockLine[i]["color"][j] == "흰":  # 왼쪽 블럭가 흰색이면
+                                blockLine[i]["color"][j] = "검"  # 왼쪽 블럭을 검정색
+                                blockLine[i]["color"][j + 1] = "흰"  # 오른쪽 블럭을 흰색으로
+                    self.idx1 = int(input('조커가 두 개입니다. 첫번째 조커를 어디에 넣으시겠습니까?: '))  # 첫번째 조커 어디에 넣을지 질문
+                    self.idx2 = int(input('조커가 두 개입니다. 두번째 조커를 어디에 넣으시겠습니까?: '))  # 두번째 조커 어디에 넣을지 질문
+                    for k in range(len(blockLine[i]["num"]) - 1, self.idx1,
+                                   -1):  # 끝에서 두 번째 자리에 위치한 조커부터 한 칸씩 왼쪽으로 이동해서 원하는 자리에 위치
+                        store = blockLine[i]["num"][k - 1]  # 조커 저장
+                        store_c = blockLine[i]["color"][k - 1]  # 조커 색 저장
+                        blockLine[i]["num"][k - 1] = blockLine[i]["num"][k - 2]  # 조커 왼쪽으로 이동
+                        blockLine[i]["num"][k - 2] = store  # 조커 왼쪽으로 이동
+                        blockLine[i]["color"][k - 1] = blockLine[i]["color"][k - 2]  # 색깔도 이동
+                        blockLine[i]["color"][k - 2] = store_c  # 색깔도 이동
+                    for k in range(len(blockLine[i]["num"]), self.idx2,
+                                   -1):  # 끝에 위치한 조커부터 한 칸씩 왼쪽으로 이동해서 원하는 자리에 위치
+                        store = blockLine[i]["num"][k - 1]  # 조커 저장
+                        store_c = blockLine[i]["color"][k - 1]  # 조커 색 저장
+                        blockLine[i]["num"][k - 1] = blockLine[i]["num"][k - 2]  # 조커 왼쪽으로 이동
+                        blockLine[i]["num"][k - 2] = store  # 조커 왼쪽으로 이동
+                        blockLine[i]["color"][k - 1] = blockLine[i]["color"][k - 2]  # 색깔도 이동
+                        blockLine[i]["color"][k - 2] = store_c  # 색깔도 이동
 
     # 박강우's part
     # 현재 오픈된 블럭을 포함하는 모든 플레이어의 블럭 열을 상대방에게 보여주는 함수
     def showBlock(self):
-        # delete "pass" and write your code here
-        pass
+        if Game.checkBlock == "true":
+            print(Game.opponentPlayernum)
+
 
     #김현준's part
     # 새로운 블럭을 본인의 블럭 열로 가져오는 함수
@@ -87,14 +360,19 @@ class Block:
 class Game:
     # 본인이 함수를 작성하시고 필요한 변수는 여기에 초기화해서 선언하기!!
     # 단, 블럭 열이나 사용자의 정보 또는 함수는 Block 클래스와 Login 클래스의 내용들 사용하기! 추가하지 말고
+
+    currentPlayerId = ""
+    opponentPlayerId = ""
+    opponentPlayernumidx = []
+    opponentPlayernum = []
+
     def __init__(self):
         pass
 
     #이정현's part
     # 자신의 차례인 사람이 누구의 블럭을 지목할지, 그 플레이어를 고르는 함수
     def pickPlayer(self):
-        # delete "pass" and write your code here
-        pass
+        self.opponentPlayerId = input("지목할 플레이어: ")
 
     #구이연's part
     # 지목한 플레이어의 블럭이 내가 생각한 블럭이 맞나 확인하는 함수
@@ -127,6 +405,7 @@ class Game:
 # main
 
 # 계정 생성 또는 로그인을 하는 부분
+
 printLine()
 while True:
     print("계정을 생성하거나, 로그인을 진행 해주세요.")
@@ -149,5 +428,4 @@ Block.showBlock()
 printLine()
 while (Game.isWinner() != True):
     for i in range(0, 3):
-
 
