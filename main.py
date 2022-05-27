@@ -357,13 +357,17 @@ class Block:
 
     # 박강우's part
     # 현재 오픈된 블럭을 포함하는 모든 플레이어의 블럭 열을 상대방에게 보여주는 함수
-    def showBlock(self):
-        if Game.checkBlock == "true":
-            print(Game.opponentPlayernum)
+    def showBlock(self, blockLine):
+        for i in blockLine["num"]:
+            print(i, end="")
+        print("")
+        for i in blockLine["color"]:
+            print(i, end="")
+        print("")
 
     #김현준's part
     # 새로운 블럭을 본인의 블럭 열로 가져오는 함수
-    def addNew(self):
+    def addNew(self, blockLine, i):
 
 
 
@@ -381,24 +385,26 @@ class Game:
 
     #이정현's part
     # 자신의 차례인 사람이 누구의 블럭을 지목할지, 그 플레이어를 고르는 함수
-    def pickPlayer(self):
-        self.opponentPlayerId = input("지목할 플레이어: ")
+    def pickPlayer(self, i):
+        self.opponentPlayerId = int(input("{0}번 플레이어는 지목할 플레이어의 번호를 입력하세요: ".format(i)))
+        return self.opponentPlayerId
 
     #구이연's part
-    # 지목한 플레이어의 블럭이 내가 생각한 블럭이 맞나 확인하는 함수
-    def checkBlock(expected, actual):
-        if expected['color']== actual['color'][expected['number']] and actual['open'][expected['number']] == F :
-            if expected['num'] == actual['num'][expected['number']] :
-                print("맞췄습니다.")
+    # 지목한 플레이어의 블럭이 내가 생각한 블럭이 맞나 확인하는 함수 # 수정 싹 해야함...
+    def checkBlock(self, expected, actual):
+        if expected['num'] == actual['num'][expected['idx']] and actual['open'][expected['idx']] == F :
+            if expected['num'] == actual['num'][expected['idx']] :
+                print("맞췄습니다.") #여기까지 수정함.
                 open_list = list(actual['open'])
-                open_list[expected["number"]] = 'T'
+                open_list[expected["idx"]] = 'T'
                 actual['open'] = ''.join(open_list)
-            elif open_list[expected['number']] != actual['num'][expected['number']] :
-                print('틀렸습니다.')
-        elif expected['color'][expected['number']] != actual['color'][expected['number']] :
-            print("색이 일치하지 않습니다.")
-        elif actual['open'][expected['number']] == 'T' :
+                return 'Y'
+        elif expected['num'] != actual['num'][expected['idx']] :
+            print('숫자가 틀렸습니다.')
+            return 'N1'
+        elif actual['open'][expected['idx']] == 'T' :
             print("이미 맞춘 블록입니다.")
+            return 'N2'
 
 
     #김다운's part
@@ -420,7 +426,7 @@ class Game:
     # 승패자가 결정 되었는지 확인하는 함수
     # return 값은 true or false
     def isWinner(self, blockLine):
-        for i in range(0, len(blockLine[i]["open"])):
+        for i in range(0, len(blockLine["open"])):
             if blockLine["open"][i] == "F":
                 return True
         return False
@@ -447,8 +453,10 @@ class Game:
 # main
 
 # 계정 생성 또는 로그인을 하는 부분
-
+'''
 printLine()
+'''
+'''
 while True:
     print("계정을 생성하거나, 로그인을 진행 해주세요.")
     choose = input("1. 계정 생성, 2. 로그인: ")
@@ -461,12 +469,87 @@ while True:
     else:
         print("올바른 입력을 다시 주세요.")
         continue
-printLine()
-print("\n게임을 시작합니다!")
-print("블럭은 배분하고 있습니다...")
-Block.giveBlock()
-Block.alignBlock()
-Block.showBlock()
-printLine()
-while (Game.isWinner() != True):
-    for i in range(0, 3):
+'''
+doing = False
+while doing == False:
+    printLine()
+    print("\n게임을 시작합니다!")
+    print("블럭은 배분하고 있습니다...")
+    Block.giveBlock()
+    print("조커를 포함한 각 플레이어의 블럭을 정렬하고 있습니다..")
+    for i in range(4):
+        Block.alignBlock(i)
+
+    while True:
+        for i in (Block.blockLine_0, Block.blockLine_1, Block.blockLine_2, Block.blockLine_3):
+            Block.showBlock(i)
+
+        check = (True, True, True, True)
+        for i, Blocks in enumerate(Block.blockLine_0, Block.blockLine_1, Block.blockLine_2, Block.blockLine_3):
+            if Game.isWinner(Blocks) == False:
+                check[i] = False
+
+        count = 0
+        for i in range(4):
+            if check[i] == False:
+                count += 1
+
+        if count == 3:
+            if Game.restart() == True:
+                pass
+            else:
+                print("게임을 종료합니다.")
+                break
+
+        print("다음 플레이어의 차례입니다...")
+        turn = turn % 4 + 1
+        if turn == 0 and check[0] == True:
+            player = Blobk.blobkLine_0
+            print("0번 플레이어의 차례입니다!")
+        elif turn == 1 and check[1] == True:
+            player = Blobk.blobkLine_1
+            print("1번 플레이어의 차례입니다!")
+        elif turn == 2 and check[2] == True:
+            player = Blobk.blobkLine_2
+            print("2번 플레이어의 차례입니다!")
+        elif turn == 3 and check[3] == True:
+            player = Blobk.blobkLine_3
+            print("3번 플레이어의 차례입니다!")
+
+        while True:
+            print("블럭을 맞출 상대 플레이어를 선택합니다...")
+            while True:
+                opponent = Game.pickPlayer(turn)
+                if opponent == 0:
+                    opponent = Blobk.blobkLine_0
+                    break
+                elif opponent == 1:
+                    opponent = Blobk.blobkLine_1
+                    break
+                elif opponent == 2:
+                    opponent = Blobk.blobkLine_2
+                    break
+                elif opponent == 3:
+                    opponent = Blobk.blobkLine_3
+                    break
+                else:
+                    print("다시 0에서 3까지 중에서 올바른 값을 입력해주세요.")
+
+            expected = {"num": 0, "idx": 0}
+            expected["idx"] = int(input("왼쪽에서 몇 번째 블럭을 맞출지 입력하세요: ")) - 1
+            expected["num"] = int(input("해당 블럭의 숫자가 무엇일지 맞추세요: "))
+
+            result = Game.checkBlock(expected, opponent)
+            if result == 'Y':
+                print("상대방 플레이어의 블럭을 맞추셨습니다!")
+                result = Game.checkBlock()
+                if result == True:
+                    break
+                else:
+                    pass
+            elif result == 'N1':
+                print("틀렸으므로, 본인이 이번 턴에 가져온 블럭을 오픈합니다.")
+                #
+                pass
+            else:
+                pass
