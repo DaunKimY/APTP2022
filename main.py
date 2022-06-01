@@ -50,11 +50,11 @@ class Block:
         self.makeToDistribute()
 
     def makeToDistribute(self):
-        for i in range(0, 12):
-            temp = BlockInfo(str(i), "검")
+        for i in range(1, 12):
+            temp = BlockInfo(i, "검")
             self.toDistribute.append(temp)
-        for i in range(0, 12):
-            temp = BlockInfo(str(i), "흰")
+        for i in range(1, 12):
+            temp = BlockInfo(i, "흰")
             self.toDistribute.append(temp)
         self.toDistribute.append(BlockInfo("-", "검"))
         self.toDistribute.append(BlockInfo("-", "흰"))
@@ -69,25 +69,19 @@ class Block:
             open = ["F", "F", "F"]
             for j in range(0, 3):
                 temp = self.toDistribute.pop()
-                for k in range(0, len(num)):
-                    if temp.number != '-' and num[k] != '-':
-                        if int(temp.number) < int(num[k]):
-                            hold_num = num[k:]
-                            hold_color = color[k:]
-                            num.append(temp.number)
-                            color.append(temp.color)
-                            num.append(hold_num)
-                            color.append(hold_color)
-                            break
+                num.append(temp.number)
+                color.append(temp.color)
 
-                        elif (int(temp.number) == int(self.toDistribute[k].number)) and (temp.color == "검") and (self.toDistribute.color == "흰"):
-                            hold_num = num[k:]
-                            hold_color = color[k:]
-                            num.append(temp.number)
-                            color.append(temp.color)
-                            num.append(hold_num)
-                            color.append(hold_color)
-                            break
+            for j in range(len(num)):
+                k = len(num) - j
+                for h in range(1, k):
+                    if ((num[h-1] != '-') and (num[h] != '-') and (num[h - 1] > num[h])) or (num[h-1] == num[h] and color[h-1] == '흰' and color[h] == "검"):
+                        temp_1 = num[h]
+                        temp_2 = color[h]
+                        num[h] = num[h-1]
+                        color[h] = color[h-1]
+                        num[h-1] = temp_1
+                        color[h-1] = temp_2
 
             if i == 0:
                 self.blockLine_0['num'] = num
@@ -106,6 +100,15 @@ class Block:
                 self.blockLine_3['color'] = color
                 self.blockLine_3['open'] = open
 
+        num_for_left_blocks = []
+        color_for_left_blocks = []
+        for i in range(0, 14):
+            temp = self.toDistribute.pop()
+            num_for_left_blocks.append(temp.number)
+            color_for_left_blocks += temp.color
+        self.blockLeft['num'] = num_for_left_blocks
+        self.blockLeft['color'] = color_for_left_blocks
+
     #박강우's part
     # 블럭들을 게임 시작전 배분하고 나서, 블럭을 정렬하는 함수 (처음 정렬할 때에는 조커블럭의 위치는 사용자가 정할 수 있도록 할 것!)
     def alignBlock(self, i):
@@ -118,85 +121,40 @@ class Block:
         elif i == 3:
             blockLine = self.blockLine_3
 
-        n = blockLine["num"].pop()  # 숫자 저장
-        s = blockLine["color"].pop()  # 색 저장
-        k = blockLine["open"].pop()  # open 여부 저장
-
-        if n != "-":
-            temp_check = 0
-            for j in range(0, len(blockLine["num"]) - 1):
-                if int(blockLine["num"][j]) > int(n):
-                    temp_num = blockLine["num"][j:]
-                    temp_color = blockLine["color"][j:]
-                    temp_open =  blockLine["open"][j:]
-                    blockLine["num"] = blockLine["num"][:j]
-                    blockLine["color"] = blockLine["color"][:j]
-                    blockLine["open"] = blockLine["open"][:j]
-                    blockLine["num"].append(n)
-                    blockLine["color"].append(s)
-                    blockLine["open"].append(k)
-                    blockLine["num"].append(temp_num)
-                    blockLine["num"].append(temp_color)
-                    blockLine["num"].append(temp_open)
-                    return
-
-                elif (int(blockLine["num"][j]) == int(n)) and (s == "검") and (blockLine["color"][j] == "흰"):
-                    temp_num = blockLine["num"][j:]
-                    temp_color = blockLine["color"][j:]
-                    temp_open = blockLine["open"][j:]
-                    blockLine["num"] = blockLine["num"][:j]
-                    blockLine["color"] = blockLine["color"][:j]
-                    blockLine["open"] = blockLine["open"][:j]
-                    blockLine["num"].append(n)
-                    blockLine["color"].append(s)
-                    blockLine["open"].append(k)
-                    blockLine["num"].append(temp_num)
-                    blockLine["num"].append(temp_color)
-                    blockLine["num"].append(temp_open)
-                    return
-
-                temp_check = j
-
-            if temp_check == len(blockLine["num"]):
-                blockLine["num"].append(n)
-                blockLine["color"].append(s)
-                blockLine["open"].append(k)
-                return
-        else:
-            idx = int(input("조커를 넣을 위치(index: 0~)를 입력하세요: "))
-            temp_num = blockLine["num"][idx:]
-            temp_color = blockLine["color"][idx:]
-            temp_open = blockLine["open"][idx:]
-            blockLine["num"] = blockLine["num"][:idx]
-            blockLine["color"] = blockLine["color"][:idx]
-            blockLine["open"] = blockLine["open"][:idx]
-            blockLine["num"].append(n)
-            blockLine["color"].append(s)
-            blockLine["open"].append(k)
-            blockLine["num"].append(temp_num)
-            blockLine["num"].append(temp_color)
-            blockLine["num"].append(temp_open)
-            return
+        for j in range(len(blockLine["num"])):
+            k = len(blockLine["num"]) - j
+            for h in range(1, k):
+                if ((blockLine["num"][h - 1] != '-') and (blockLine["num"][h] != '-') and (blockLine["num"][h - 1] > blockLine["num"][h])) or (
+                        blockLine["num"][h - 1] == blockLine["num"][h] and blockLine["color"][h - 1] == '흰' and blockLine["color"][h] == "검"):
+                    temp_1 = blockLine["num"][h]
+                    temp_2 = blockLine["color"][h]
+                    temp_3 = blockLine["open"][h]
+                    blockLine["num"][h] = blockLine["num"][h - 1]
+                    blockLine["color"][h] = blockLine["color"][h - 1]
+                    blockLine["open"][h] = blockLine["open"][h - 1]
+                    blockLine["num"][h - 1] = temp_1
+                    blockLine["color"][h - 1] = temp_2
+                    blockLine["open"][h - 1] = temp_3
 
     # 박강우's part
     # 현재 오픈된 블럭을 포함하는 모든 플레이어의 블럭 열을 상대방에게 보여주는 함수
     def showBlock(self, blockLine):
         for i in range(len(blockLine["num"])):
-            print(blockLine["num"][i], end="")
+            print(blockLine["num"][i], end=" ")
         print("")
         for i in range(len(blockLine["color"])):
-            print(blockLine["color"][i], end="")
+            print(blockLine["color"][i], end=" ")
         print("")
 
     def showBlockOppo(self, blockLine):
         for i in (range(len(blockLine["open"]))):
-            if blockLine["open"][j] == "T":
-                print(i, end="")
+            if blockLine["open"][i] == "T":
+                print(blockLine["num"][i], end=" ")
             else:
                 print("X", end="")
         print("")
-        for i in blockLine["color"]:
-            print(i, end="")
+        for i in (range(len(blockLine["open"]))):
+            print(blockLine["color"][i], end=" ")
         print("")
 
     #김현준's part
@@ -327,7 +285,6 @@ while doing == False:
                 break
                 
         print("다음 플레이어의 차례입니다...")
-        turn = turn % 4 + 1
         if turn == 0 and check[0] == True:
             player = my_block.blockLine_0
             print("0번 플레이어의 차례입니다!")
@@ -373,7 +330,7 @@ while doing == False:
             result = my_game.checkBlock(expected, opponent)
             if result == 'Y':
                 print("상대방 플레이어의 블럭을 맞추셨습니다!")
-                result = my_game.checkBlock()
+                result = my_game.checkBlockAgain()
                 if result == True:
                     break
                 else:
@@ -381,5 +338,9 @@ while doing == False:
             elif result == 'N1':
                 openBlk = int(input("틀렸으므로, 본인의 블럭을 오픈합니다. index 입력(0~):"))
                 player["open"][openBlk] = "T"
+                break
             else:
                 pass
+
+            turn = turn % 4 + 1
+            break
